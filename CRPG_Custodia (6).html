@@ -61,6 +61,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font
 /* Inputs — utilise IDs v5: inp-r, inp-c, inp-v */
 #inp-r,#inp-c{display:block}
 #inp-v{display:none}
+#inp-a{display:none}
 .inp-wrap{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:1.2rem 1.5rem;margin-bottom:1.5rem}
 .solde-check{display:flex;align-items:center;gap:0.6rem;margin-top:1rem;padding:0.7rem 0.8rem;border-radius:8px;border:1.5px solid var(--line);cursor:pointer;transition:all 0.15s;flex-wrap:wrap}
 .solde-check:hover{border-color:var(--bleu2);background:rgba(0,35,149,0.03)}
@@ -203,6 +204,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font
     <div class="nav-sep"></div>
     <span class="nav-section-lbl">Outils</span>
     <button class="nb" onclick="selBien('v',this)"><span class="nav-ic">→</span>Simulation vente</button>
+    <button class="nb" onclick="selBien('a',this)"><span class="nav-ic">🏠</span>Location Airbnb</button>
     <div class="nav-sep"></div>
     <span class="nav-section-lbl">Statut location</span>
     <button class="nb-toggle act-on" id="tog-r" onclick="toggleBien('r',this)"><span class="nav-ic">⚓</span><span style="flex:1">Rosemont</span><span class="tog-badge on">Loué</span></button>
@@ -281,6 +283,30 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font
         <div style="height:300px"><canvas id="cVente" role="img" aria-label="Simulation vente"></canvas></div>
       </div>
       <div id="v_result"></div>
+    </div>
+
+    <!-- AIRBNB (id=inp-a) -->
+    <div id="inp-a" style="display:none">
+      <div class="inp-wrap">
+        <div class="inp-ttl"><span class="inp-dot" style="background:#FF5A5F"></span>Simulation Location Airbnb</div>
+        <div class="vb-row">
+          <button class="vb ar" id="ab-r" onclick="selABien('r')">⚓ Rosemont</button>
+          <button class="vb" id="ab-c" onclick="selABien('c')">🏛 Cimiez</button>
+        </div>
+        <div class="inp-grid">
+          <div class="ig"><label>Prix par nuit</label><div class="iw"><input type="number" id="a_nuit" value="85" step="5" oninput="recalcAirbnb()"><span class="sfx">€/nuit</span></div></div>
+          <div class="ig"><label>Taux d'occupation</label><div class="iw"><input type="number" id="a_occ" value="70" step="5" min="0" max="100" oninput="recalcAirbnb()"><span class="sfx">%</span></div></div>
+          <div class="ig"><label>Commission Airbnb</label><div class="iw"><input type="number" id="a_comm" value="15.5" step="0.5" oninput="recalcAirbnb()"><span class="sfx">%</span></div></div>
+        </div>
+        <label class="solde-check" style="margin-top:0.8rem"><input type="checkbox" id="a_conc" onchange="recalcAirbnb()"><span class="solde-label">Conciergerie</span><span class="solde-sub">Gestion, ménage, accueil, linge — délégation complète (déductible BIC)</span></label>
+        <div id="a_conc_wrap" style="display:none;margin-top:0.5rem">
+          <div class="inp-grid">
+            <div class="ig"><label>Taux conciergerie</label><div class="iw"><input type="number" id="a_conc_tx" value="20" step="1" min="0" max="50" oninput="recalcAirbnb()"><span class="sfx">% du CA brut</span></div></div>
+          </div>
+        </div>
+        <label class="solde-check" style="margin-top:0.5rem"><input type="checkbox" id="a_solde" onchange="recalcAirbnb()"><span class="solde-label">Crédit soldé</span><span class="solde-sub">Simuler sans mensualité prêt ni assurance emprunteur</span></label>
+      </div>
+      <div id="a_result"></div>
     </div>
 
     <!-- KPI STRIP (id=kpiStrip) -->
@@ -375,7 +401,7 @@ const CRD_P={2025:123133.80,2026:119908.72,2027:116568.27,2028:113108.33,2029:10
 const CRD_C={2026:130335.90,2027:124526.84,2028:118637.11,2029:112665.57,2030:106611.13,2031:100472.61,2032:96332.96,2033:90051.69,2034:83683.19,2035:77226.25,2036:70679.62,2037:64042.08,2038:57312.36,2039:50489.18,2040:43571.24,2041:36557.23,2042:29445.81,2043:22235.63,2044:14925.32,2045:7513.49,2046:0};
 
 // Constantes
-const CP={pno:140,copro:711.47,amo_bien_an:4578.63,amo_trav_an:1299.43,amo_mob_an:214.38,amo_incorp_an:3.70,amo_bien_b:123150,amo_trav_b:24413.99,pret_init:123000};
+const CP={pno:140,copro:711.47,amo_bien_an:4578.63,amo_trav_an:1299.43,amo_mob_an:210.68,amo_incorp_an:3.70,amo_bien_b:123150,amo_trav_b:24413.99,pret_init:123000};
 const CC={pno:180,copro:42.01*12,amo_bien_an:5431.50,amo_trav_an:2300,amo_bien_b:153000,amo_trav_b:23000,pret_init:160000};
 // Investissement initial complet par bien
 const INV_P={apport:10000,frais_acq:15263.50,travaux:25051.28}; // total: 50 314.78
@@ -503,14 +529,15 @@ function dc(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
 function selBien(b,btn){
   curBien=b;
   document.querySelectorAll('.nb').forEach(x=>x.classList.remove('ar','ac','ab','av'));
-  btn.classList.add(b==='r'?'ar':b==='c'?'ac':b==='b'?'ab':'av');
-  const isV=b==='v';
-  document.getElementById('inp-r').style.display=(!isV&&(b==='r'||b==='b'))?'block':'none';
-  document.getElementById('inp-c').style.display=(!isV&&(b==='c'||b==='b'))?'block':'none';
+  btn.classList.add(b==='r'?'ar':b==='c'?'ac':b==='b'?'ab':b==='v'?'av':'av');
+  const isV=b==='v',isA=b==='a';
+  document.getElementById('inp-r').style.display=(!isV&&!isA&&(b==='r'||b==='b'))?'block':'none';
+  document.getElementById('inp-c').style.display=(!isV&&!isA&&(b==='c'||b==='b'))?'block':'none';
   document.getElementById('inp-v').style.display=isV?'block':'none';
-  document.getElementById('heroBand').style.display=isV?'none':'block';
-  document.getElementById('mainWrap').style.display=isV?'none':'block';
-  if(isV)recalcVente();else recalc();
+  document.getElementById('inp-a').style.display=isA?'block':'none';
+  document.getElementById('heroBand').style.display=(isV||isA)?'none':'block';
+  document.getElementById('mainWrap').style.display=(isV||isA)?'none':'block';
+  if(isV)recalcVente();else if(isA)recalcAirbnb();else recalc();
 }
 
 function selVBien(b){
@@ -687,6 +714,137 @@ function trRow(l,v,c){return `<div class="tr"><span class="tl">${l}</span><span 
 function trSub(l,v,c){return `<div class="tr sub"><span class="tl">${l}</span><span class="tv ${c||''}">${v}</span></div>`;}
 function trTot(l,v,c){return `<div class="tr tot"><span class="tl">${l}</span><span class="tv ${c||''}">${v}</span></div>`;}
 
+/* ===== AIRBNB ===== */
+let curABien='r';
+function selABien(b){
+  curABien=b;
+  const r=document.getElementById('ab-r'),c=document.getElementById('ab-c');
+  r.style.background=b==='r'?'#002395':'white';r.style.color=b==='r'?'white':'#5C6475';r.style.borderColor=b==='r'?'#002395':'#DDE0E8';
+  c.style.background=b==='c'?'#C8960C':'white';c.style.color=b==='c'?'white':'#5C6475';c.style.borderColor=b==='c'?'#C8960C':'#DDE0E8';
+  document.getElementById('a_nuit').value=b==='r'?85:95;
+  recalcAirbnb();
+}
+
+function recalcAirbnb(){
+  const b=curABien;
+  const prixNuit=+document.getElementById('a_nuit').value||0;
+  const occPct=+document.getElementById('a_occ').value||0;
+  const commPct=+document.getElementById('a_comm').value||0;
+  const hasConc=document.getElementById('a_conc').checked;
+  const concPct=hasConc?(+document.getElementById('a_conc_tx').value||0):0;
+  const soldePret=document.getElementById('a_solde').checked;
+  document.getElementById('a_conc_wrap').style.display=hasConc?'block':'none';
+
+  const nom=b==='r'?'Rosemont':'Cimiez';
+  const surf=b==='r'?31.13:51;
+  const constRef=b==='r'?CP:CC;
+  const LY=b==='r'?LY_P:LY_C;
+  const p=gP();
+  const tf=b==='r'?p.p_tf:p.c_tf;
+  const cfe=b==='r'?p.p_cfe:p.c_cfe;
+  const loyerHC_classique=b==='r'?p.p_lhc:p.c_lhc;
+
+  // Calcul annuel Airbnb
+  const nuitsAn=Math.round(365*occPct/100);
+  const caBrut=prixNuit*nuitsAn;
+  const commAirbnb=caBrut*commPct/100;
+  const caNetHote=caBrut-commAirbnb; // ce que l'hôte reçoit d'Airbnb
+  const concFrais=hasConc?caBrut*concPct/100:0; // conciergerie sur CA brut
+  const revenuNet=caNetHote-concFrais;
+  const revenuNetM=revenuNet/12;
+
+  // Taxe de séjour Nice: 5% HT × 1.34 (majoration 34%), plafonnée à 6.43€/nuit/pers
+  // Collectée automatiquement par Airbnb → neutre pour le propriétaire
+  const taxeSejParNuit=Math.min(6.43,prixNuit*0.05*1.34);
+
+  // Charges fixes annuelles
+  const pno=constRef.pno;
+  const copro=constRef.copro;
+  const chargesFixes=tf+pno+copro+cfe;
+
+  // Mensualité prêt (ref année 2026)
+  const yrRef=2026;
+  const lyRef=LY[yrRef];
+  const mensualiteAn=soldePret?0:(lyRef?lyRef.tot:0);
+  const intAn=soldePret?0:(lyRef?lyRef.int:0);
+  const assAn=soldePret?0:(lyRef?lyRef.ass:0);
+
+  // Net mensuel (taxe de séjour exclue car collectée par plateforme)
+  const netAn=revenuNet-chargesFixes-mensualiteAn;
+  const netM=netAn/12;
+
+  // BIC fiscal: commission Airbnb + conciergerie sont déductibles
+  const amoTotal=constRef.amo_bien_an+(constRef.amo_trav_an||0)+(b==='r'?(CP.amo_mob_an+CP.amo_incorp_an):0);
+  // Base BIC = CA brut - commission - conciergerie - intérêts - assurance - charges - amortissements
+  const chargesDeductibles=commAirbnb+concFrais+intAn+assAn+chargesFixes;
+  const bicBrut=caBrut-chargesDeductibles-amoTotal;
+
+  // Impôt si BIC positif
+  const bicImposable=Math.max(0,bicBrut);
+  const impotLMNP=bicImposable*0.472;
+  const netApresImpot=netAn-impotLMNP;
+  const netApresImpotM=netApresImpot/12;
+
+  // Comparaison location classique (net avant impôt LMNP classique pour cohérence)
+  const loyerClassiqueAn=loyerHC_classique*12;
+  const netClassiqueAn=loyerClassiqueAn-mensualiteAn-chargesFixes;
+  const delta=netApresImpot-netClassiqueAn;
+
+  const S=v=>(v>=0?'+ ':'− ')+f0(Math.abs(v))+' €';
+
+  document.getElementById('a_result').innerHTML=`
+    <div class="g2" style="margin-top:0.5rem">
+      <div class="card" style="border-left:3px solid #FF5A5F">
+        <div class="ct">Revenus Airbnb — ${nom} · ${surf} m²</div>
+        ${trRow('Nuits louées/an ('+occPct+'%)',nuitsAn+' nuits','g')}
+        ${trRow('CA brut ('+nuitsAn+' × '+prixNuit+'€)',fe(caBrut),'g')}
+        ${trRow('Commission Airbnb ('+commPct+'%)','− '+fe(commAirbnb),'r')}
+        ${trTot('Versé par Airbnb (CA net hôte)',fe(caNetHote),'g')}
+        ${hasConc?trRow('Conciergerie ('+concPct+'% du CA brut)','− '+fe(concFrais),'r'):''}
+        ${trTot('Revenu net'+(hasConc?' après conciergerie':''),fe(revenuNet)+' soit '+fe(revenuNetM)+'/mois','g')}
+        <div class="note" style="border-left-color:#888;background:rgba(0,0,0,0.03)">Taxe de séjour Nice (~${taxeSejParNuit.toFixed(2)}€/nuit/pers) : collectée et reversée automatiquement par Airbnb. Neutre pour vous.</div>
+      </div>
+
+      <div class="card ${netApresImpotM>=0?'vt':'rg'}">
+        <div class="ct">Cashflow mensuel — ${soldePret?'Crédit soldé':'Avec crédit'}</div>
+        ${trRow('Revenu net Airbnb',fe(revenuNet)+'/an','g')}
+        ${trRow('Mensualité prêt',soldePret?'0 € (soldé)':'− '+fe(mensualiteAn)+'/an',soldePret?'g':'r')}
+        ${trRow('Charges fixes (TF+PNO+copro+CFE)','− '+fe(chargesFixes)+'/an','r')}
+        ${trTot('Net avant impôt',fe(netAn)+'/an · '+fe(netM)+'/mois',netM>=0?'g':'r')}
+        ${bicImposable>0?trRow('Impôt LMNP (47,2% sur '+fe(bicImposable)+')','− '+fe(impotLMNP)+'/an','r')
+          :trRow('Impôt LMNP','0 € (BIC négatif)','g')}
+        ${trTot('Net après impôt',fe(netApresImpot)+'/an · '+fe(netApresImpotM)+'/mois',netApresImpotM>=0?'g':'r')}
+      </div>
+    </div>
+
+    <div class="g2" style="margin-top:0.5rem">
+      <div class="card bl">
+        <div class="ct">Résultat BIC fiscal — Airbnb ${nom}</div>
+        ${trRow('CA brut Airbnb',fe(caBrut),'g')}
+        ${trRow('− Commission Airbnb ('+commPct+'%)','− '+fe(commAirbnb),'gr')}
+        ${hasConc?trRow('− Conciergerie ('+concPct+'%)','− '+fe(concFrais),'gr'):''}
+        ${soldePret?'':trRow('− Intérêts emprunt','− '+fe(intAn),'gr')}
+        ${soldePret?'':trRow('− Assurance emprunt','− '+fe(assAn),'gr')}
+        ${trRow('− Charges déductibles (TF+PNO+copro+CFE)','− '+fe(chargesFixes),'gr')}
+        ${trRow('− Amortissements','− '+fe(amoTotal),'gr')}
+        ${trTot('Résultat BIC',fpm(bicBrut),bicBrut<0?'g':'r')}
+        ${bicImposable>0?`
+          <div class="tr" style="margin-top:0.3rem"><span class="tl" style="font-weight:600">Impôt dû</span><span class="tv r" style="font-size:1rem">− ${fe(impotLMNP)}/an</span></div>
+          <div class="note" style="border-left-color:var(--rouge);background:rgba(200,50,50,0.05)">IR 30% (${fe(bicImposable*0.30)}) + PS 17,2% (${fe(bicImposable*0.172)}) = ${fe(impotLMNP)}/an soit ${fe(impotLMNP/12)}/mois</div>
+        `:`<div class="note" style="border-left-color:var(--vert);background:var(--vert-p)">BIC négatif — aucun impôt LMNP. Les amortissements couvrent le revenu.</div>`}
+      </div>
+
+      <div class="card ${delta>=0?'vt':'rg'}">
+        <div class="ct">Comparaison vs location classique</div>
+        ${trRow('Net Airbnb après impôt',fe(netApresImpot)+'/an · '+fe(netApresImpotM)+'/mois',netApresImpotM>=0?'g':'r')}
+        ${trRow('Net location classique ('+fe(loyerHC_classique)+'/m HC)',fe(netClassiqueAn)+'/an · '+fe(netClassiqueAn/12)+'/mois',netClassiqueAn>=0?'g':'r')}
+        ${trTot('Delta Airbnb vs classique',S(delta)+'/an · '+S(delta/12)+'/mois',delta>=0?'g':'r')}
+        <div class="note">${delta>=0?
+          'Airbnb rapporte '+fe(delta)+'/an de plus que la location classique.'+(hasConc?' Même avec la conciergerie à '+concPct+'%.':'')
+          :'La location classique est plus rentable de '+fe(Math.abs(delta))+'/an. Augmentez le prix/nuit ou le taux d\'occupation.'}</div>
+      </div>
+    </div>`;
+}
 function tableauBien(d,bdg){
   if(!d)return'';
   const pos=d.cfM>=0;
