@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRPG Custodia</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF;--bg2:#FFFFFF;--bg3:#F5F5F5;
+  --ink:#1A1814;--ink2:#6B6558;--ink3:#A89F94;
+  --line:#D8D2C8;--line2:#C8C1B5;
+  --bleu:#1B3A6B;--bleu2:#2952A3;--bleu-l:rgba(27,58,107,0.08);
+  --or:#8B6914;--or2:#C49A20;--or-l:rgba(139,105,20,0.1);
+  --vert:#2D5A3D;--vert-l:rgba(45,90,61,0.1);
+  --rouge:#8B2020;--rouge-l:rgba(139,32,32,0.1);
+  --jaune:#E8B830;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;display:flex}
+
+/* SIDEBAR */
+.sb{width:220px;min-width:220px;background:#F2EDE4;min-height:100vh;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;flex-shrink:0}
+.sb-top{padding:2rem 1.5rem 1.5rem;border-bottom:1px solid rgba(0,0,0,0.08);display:flex;flex-direction:column;align-items:center}
+.sb-name{font-size:0.75rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#1A1814;margin-top:1rem}
+.sb-sub{font-size:0.54rem;color:#A89F94;margin-top:3px;letter-spacing:0.05em;text-align:center}
+.sb-nav{flex:1;padding:1.5rem 0.8rem}
+.nav-section-lbl{font-size:0.52rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:#A89F94;padding:0 0.6rem;margin-bottom:0.4rem;margin-top:1rem;display:block}
+.nav-section-lbl:first-child{margin-top:0}
+/* Boutons nav avec IDs et classes v5 */
+.nb{display:flex;align-items:center;gap:0.65rem;width:100%;padding:0.65rem 0.8rem;font-size:0.8rem;font-family:'DM Sans',sans-serif;font-weight:400;color:#6B6558;background:none;border:none;border-radius:8px;cursor:pointer;text-align:left;transition:all 0.15s;margin-bottom:2px}
+.nb:hover{background:rgba(0,0,0,0.06);color:#1A1814}
+.nb.ar{background:var(--bleu);color:white;font-weight:600}
+.nb.ac{background:var(--or2);color:white;font-weight:600}
+.nb.ab{background:rgba(0,0,0,0.08);color:#1A1814;font-weight:600}
+.nb.av{background:var(--rouge);color:white;font-weight:600}
+.nav-ic{font-size:0.95rem;width:18px;text-align:center;flex-shrink:0}
+.nav-sep{height:1px;background:rgba(0,0,0,0.07);margin:0.8rem 0.5rem}
+.sb-foot{padding:1rem 1.5rem;border-top:1px solid rgba(0,0,0,0.07);font-size:0.54rem;color:#A89F94;text-align:center;line-height:1.7}
+
+/* MAIN */
+.main-wrap{flex:1;display:flex;flex-direction:column;min-height:100vh;overflow-x:hidden}
+
+/* Topbar */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--line);padding:0.7rem 1.8rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+.topbar-lbl{font-size:0.6rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink2);white-space:nowrap}
+.yr-row{display:flex;gap:3px;flex-wrap:wrap}
+/* Boutons années avec classe .yr pour v5 */
+.yr{padding:0.28rem 0.65rem;font-size:0.65rem;font-family:'DM Mono',monospace;cursor:pointer;border:1.5px solid var(--line2);border-radius:5px;background:transparent;color:var(--ink2);transition:all 0.12s;font-weight:500}
+.yr:hover{border-color:var(--bleu);color:var(--bleu);background:var(--bleu-l)}
+.yr.active{background:var(--bleu);color:white;border-color:var(--bleu);font-weight:700}
+
+/* Hero band caché — v5 le gère mais on l'affiche dans la topbar */
+#heroBand{display:none}
+
+/* Content */
+.content{padding:1.8rem;flex:1}
+
+/* Inputs — utilise IDs v5: inp-r, inp-c, inp-v */
+#inp-r,#inp-c{display:block}
+#inp-v{display:none}
+#inp-a{display:none}
+.inp-wrap{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:1.2rem 1.5rem;margin-bottom:1.5rem}
+.solde-check{display:flex;align-items:center;gap:0.6rem;margin-top:1rem;padding:0.7rem 0.8rem;border-radius:8px;border:1.5px solid var(--line);cursor:pointer;transition:all 0.15s;flex-wrap:wrap}
+.solde-check:hover{border-color:var(--bleu2);background:rgba(0,35,149,0.03)}
+.solde-check input[type="checkbox"]{width:16px;height:16px;accent-color:var(--vert);cursor:pointer;flex-shrink:0}
+.solde-label{font-size:0.78rem;font-weight:600;color:var(--ink)}
+.solde-sub{font-size:0.58rem;color:var(--ink3);width:100%;padding-left:22px}
+.inp-ttl{font-size:0.6rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink2);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem}
+.inp-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.inp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(142px,1fr));gap:0.8rem}
+.ig label{font-size:0.58rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink3);display:block;margin-bottom:0.3rem}
+.iw{position:relative}
+.iw input,.iw select{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:7px;padding:0.45rem 2.2rem 0.45rem 0.7rem;font-family:'DM Mono',monospace;font-size:0.85rem;color:var(--ink);font-weight:500;-webkit-appearance:none}
+.iw input:focus,.iw select:focus{outline:none;border-color:var(--bleu2);box-shadow:0 0 0 2px rgba(41,82,163,0.12)}
+.sfx{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:0.58rem;color:var(--ink3);pointer-events:none}
+.deriv{font-family:'DM Mono',monospace;font-size:0.85rem;color:var(--vert);background:var(--vert-l);border:1px solid rgba(45,90,61,0.2);border-radius:7px;padding:0.45rem 0.7rem;font-weight:500}
+
+/* KPI strip — ID v5: kpiStrip */
+#kpiStrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:1.5rem}
+.kpi{background:var(--bg2);padding:1rem 1.2rem;border-top:3px solid transparent}
+.kpi.bl,.kpi.bleu{border-top-color:var(--bleu2)}.kpi.or{border-top-color:var(--or2)}.kpi.vt{border-top-color:var(--vert)}.kpi.gr{border-top-color:var(--line2)}
+.klbl{font-size:0.56rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:0.3rem}
+.kval{font-family:'DM Mono',monospace;font-size:1.05rem;font-weight:500;color:var(--ink);line-height:1.1}
+.kval.vt{color:var(--vert)}.kval.rg{color:var(--rouge)}.kval.or{color:var(--or)}.kval.bl,.kval.bleu{color:var(--bleu)}.kval.gr{color:var(--ink3)}
+.ksub{font-size:0.52rem;color:var(--ink3);margin-top:0.2rem}
+
+/* Charts — IDs v5: cNet, cFlux, cRich, cDonut */
+.charts-row-main{display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1rem}
+.charts-row-sec{display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.chart-card{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:1.2rem}
+.cc-ttl{font-size:0.6rem;font-weight:600;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink2);margin-bottom:0.5rem}
+.cleg{display:flex;flex-wrap:wrap;gap:0.7rem;margin-bottom:0.8rem;font-size:0.6rem;color:var(--ink2)}
+.cleg span{display:flex;align-items:center;gap:0.35rem}
+.cdot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+
+/* Detail — ID v5: detail */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:1.2rem}
+.card.bl{border-left:3px solid var(--bleu2)}.card.or{border-left:3px solid var(--or2)}.card.vt{border-left:3px solid var(--vert)}.card.rg{border-left:3px solid var(--rouge)}
+.ct{font-size:0.56rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink2);margin-bottom:0.85rem;padding-bottom:0.55rem;border-bottom:1px solid var(--line)}
+.tr{display:flex;justify-content:space-between;align-items:baseline;padding:0.34rem 0;border-bottom:1px solid var(--line);font-size:0.75rem}
+.tr:last-child{border-bottom:none}
+.tl{color:var(--ink2);font-weight:300}.tv{font-family:'DM Mono',monospace;font-weight:500;font-size:0.78rem}
+.tv.g{color:var(--vert)}.tv.r{color:var(--rouge)}.tv.b{color:var(--bleu)}.tv.or{color:var(--or)}.tv.gr{color:var(--ink3)}
+.tr.tot{border-top:1px solid var(--line2);margin-top:0.3rem;padding-top:0.48rem;font-weight:600;border-bottom:none}
+.tr.sub .tl{padding-left:0.75rem;color:var(--ink3);font-size:0.68rem}.tr.sub .tv{color:var(--ink3);font-size:0.68rem}
+
+/* Gauge */
+.gau{margin:0.5rem 0}
+.gau-h{display:flex;justify-content:space-between;font-size:0.6rem;color:var(--ink2);margin-bottom:4px}
+.gau-t{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.gau-f{height:100%;border-radius:3px;transition:width 0.5s}
+.gau-p{font-size:0.55rem;color:var(--ink3);text-align:right;margin-top:2px;font-family:'DM Mono',monospace}
+
+/* Note */
+.note{font-size:0.62rem;color:var(--ink2);line-height:1.55;padding:0.6rem 0.85rem;border-left:3px solid var(--or2);margin-top:0.7rem;background:var(--or-l);border-radius:0 6px 6px 0}
+
+/* Badge */
+.bbdg{display:inline-block;padding:0.1rem 0.5rem;border-radius:4px;font-size:0.55rem;font-weight:600;letter-spacing:0.06em;margin-right:4px}
+.bbdg.r{background:var(--bleu-l);color:var(--bleu)}.bbdg.c{background:var(--or-l);color:var(--or)}
+
+/* VENTE */
+.vente-hero{background:var(--bleu);border-radius:12px;padding:2rem;margin-bottom:1.2rem;display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:1.5rem;align-items:start;position:relative;overflow:hidden}
+.vente-hero::after{content:'NET';position:absolute;right:1.5rem;top:50%;transform:translateY(-50%);font-size:6rem;color:rgba(255,255,255,0.04);pointer-events:none;font-weight:700;font-family:'DM Mono',monospace}
+.vh-sep{background:rgba(255,255,255,0.08);width:1px;align-self:stretch}
+.vh-lbl{font-size:0.52rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:0.4rem}
+.vh-num{font-family:'DM Mono',monospace;font-size:1.5rem;font-weight:500;line-height:1;margin-bottom:0.2rem}
+.vh-num.pos{color:var(--jaune)}.vh-num.neg{color:#F4AAAA}
+.vh-sub{font-size:0.6rem;color:rgba(255,255,255,0.28);line-height:1.5;margin-bottom:0.5rem}
+.vh-lines{display:flex;flex-direction:column;gap:2px}
+.vh-lines span{font-size:0.57rem;font-family:'DM Mono',monospace}
+.regime-toggle{display:flex;gap:0;border:1.5px solid var(--line2);border-radius:8px;overflow:hidden;width:fit-content;margin-bottom:1.2rem}
+.rtog{padding:0.45rem 1.1rem;font-size:0.7rem;font-family:'DM Sans',sans-serif;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;border:none;cursor:pointer;background:var(--bg2);color:var(--ink2);transition:all 0.15s}
+.rtog.rs{background:var(--rouge);color:white}.rtog.rp{background:var(--vert);color:white}
+.vb-row{display:flex;gap:8px;margin-bottom:1.2rem}
+/* Boutons vente — IDs v5: vb-r, vb-c */
+.vb{padding:0.55rem 1.3rem;font-size:0.75rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;border:2px solid var(--line2);border-radius:8px;background:var(--bg2);color:var(--ink2);transition:all 0.15s}
+.vb:hover{border-color:var(--bleu);color:var(--bleu)}
+.vb.ar{background:var(--bleu);color:white;border-color:var(--bleu)}
+.vb.ac{background:var(--or2);color:white;border-color:var(--or2)}
+/* rp-note — ID v5: rp-note */
+#rp-note{display:none;background:var(--vert-l);border:1px solid rgba(45,90,61,0.2);border-radius:8px;padding:0.7rem 1rem;margin-bottom:1rem;font-size:0.72rem;color:var(--vert)}
+.inp-vente-wrap{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:1.2rem 1.5rem;margin-bottom:1.2rem}
+
+/* mainWrap — ID v5 */
+#mainWrap{}
+
+@media(max-width:850px){
+  body{flex-direction:column}
+  .sb{width:100%;min-height:auto;height:auto;position:relative}
+  .sb-top{flex-direction:row;gap:1rem;padding:1rem 1.5rem;align-items:center}
+  .sb-nav{display:flex;flex-direction:row;flex-wrap:wrap;gap:4px;padding:0.5rem}
+  .nav-section-lbl,.nav-sep{display:none}
+  .charts-row-main,.charts-row-sec,.g2,.g3,.vente-hero{grid-template-columns:1fr}
+  #kpiStrip{grid-template-columns:1fr 1fr}
+  .content{padding:1rem}
+}
+
+.nb-toggle{display:flex;align-items:center;gap:0.6rem;width:100%;padding:0.58rem 0.8rem;font-size:0.78rem;font-family:'DM Sans',sans-serif;font-weight:400;color:#6B6558;background:none;border:1.5px solid rgba(0,0,0,0.1);border-radius:8px;cursor:pointer;transition:all 0.15s;margin-bottom:3px}
+.nb-toggle:hover{border-color:rgba(0,0,0,0.25);color:#1A1814}
+.nb-toggle.act-on{border-color:rgba(45,180,100,0.5);background:rgba(45,180,100,0.1);color:#1A1814}
+.nb-toggle.act-off{border-color:rgba(200,60,60,0.4);background:rgba(200,60,60,0.08);color:#6B6558}
+.tog-badge{margin-left:auto;font-size:0.55rem;font-weight:700;letter-spacing:0.06em;padding:0.12rem 0.45rem;border-radius:3px;flex-shrink:0}
+.tog-badge.on{background:rgba(45,180,100,0.2);color:#2D5A3D}
+.tog-badge.off{background:rgba(200,60,60,0.15);color:#8B2020}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sb">
+  <div class="sb-top">
+    <!-- Citronnier SVG minimaliste -->
+    <svg viewBox="0 0 80 90" xmlns="http://www.w3.org/2000/svg" width="72" height="82">
+      <path d="M40 88 Q38 72 36 60 Q35 50 40 44" stroke="rgba(0,0,0,0.35)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M40 64 Q27 53 16 48" stroke="rgba(0,0,0,0.2)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      <path d="M40 55 Q53 44 63 38" stroke="rgba(0,0,0,0.2)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      <path d="M40 44 Q37 30 38 17" stroke="rgba(0,0,0,0.25)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      <ellipse cx="38" cy="17" rx="7" ry="4" fill="rgba(0,0,0,0.06)" transform="rotate(-20 38 17)"/>
+      <ellipse cx="16" cy="46" rx="8" ry="4.5" fill="rgba(0,0,0,0.05)" transform="rotate(15 16 46)"/>
+      <ellipse cx="64" cy="37" rx="8" ry="4.5" fill="rgba(0,0,0,0.05)" transform="rotate(-25 64 37)"/>
+      <ellipse cx="19" cy="44" rx="5" ry="3.2" fill="#E8B830" transform="rotate(20 19 44)"/>
+      <path d="M23.5 41.5 Q26 39.5 25.5 40Z" fill="#E8B830"/>
+      <path d="M14.5 46.5 Q12 48.5 12.5 48Z" fill="#E8B830"/>
+      <ellipse cx="61" cy="34" rx="5" ry="3.2" fill="#E8B830" transform="rotate(-15 61 34)"/>
+      <path d="M65.5 31.5 Q68 29.5 67.5 30Z" fill="#E8B830"/>
+      <path d="M56.5 36.5 Q54 38.5 54.5 38Z" fill="#E8B830"/>
+      <ellipse cx="38" cy="11" rx="4.5" ry="2.8" fill="#E8B830" transform="rotate(-10 38 11)"/>
+      <path d="M42 9 Q44.5 7 44 7.5Z" fill="#E8B830"/>
+    </svg>
+    <div class="sb-name">CRPG Custodia</div>
+    <div class="sb-sub">Gestion patrimoniale locative</div>
+  </div>
+
+  <nav class="sb-nav">
+    <span class="nav-section-lbl">Biens</span>
+    <button class="nb ar" onclick="selBien('r',this)"><span class="nav-ic">⚓</span>Rosemont</button>
+    <button class="nb" onclick="selBien('c',this)"><span class="nav-ic">🏛</span>Cimiez</button>
+    <button class="nb" onclick="selBien('b',this)"><span class="nav-ic">◈</span>Consolidé</button>
+    <div class="nav-sep"></div>
+    <span class="nav-section-lbl">Outils</span>
+    <button class="nb" onclick="selBien('v',this)"><span class="nav-ic">→</span>Simulation vente</button>
+    <button class="nb" onclick="selBien('a',this)"><span class="nav-ic">🏠</span>Location Airbnb</button>
+    <div class="nav-sep"></div>
+    <span class="nav-section-lbl">Statut location</span>
+    <button class="nb-toggle act-on" id="tog-r" onclick="toggleBien('r',this)"><span class="nav-ic">⚓</span><span style="flex:1">Rosemont</span><span class="tog-badge on">Loué</span></button>
+    <button class="nb-toggle act-on" id="tog-c" onclick="toggleBien('c',this)"><span class="nav-ic">🏛</span><span style="flex:1">Cimiez</span><span class="tog-badge on">Loué</span></button>
+  </nav>
+
+  <div class="sb-foot">LMNP Réel Simplifié · Cédric GIRALDI<br>Document non contractuel</div>
+</div>
+
+<!-- MAIN -->
+<div class="main-wrap">
+
+  <!-- Topbar avec contexte + années -->
+  <div class="topbar">
+    <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+      <div style="display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap">
+        <span class="topbar-lbl" id="topbar-ctx">Rosemont · 2026</span>
+        <span id="topbar-net" style="font-family:'DM Mono',monospace;font-size:1.05rem;font-weight:600;color:var(--vert)">—</span>
+      </div>
+      <span id="topbar-sub" style="font-size:0.6rem;color:var(--ink3)"></span>
+    </div>
+    <div class="yr-row" id="yrBar"></div>
+  </div>
+
+  <!-- Elements cachés pour compatibilité v5 -->
+  <div id="heroBand" aria-hidden="true" style="position:absolute;visibility:hidden;pointer-events:none;height:0;overflow:hidden"><span id="h_m"></span><span id="h_ms"></span><span id="h_a"></span><span id="h_as"></span></div>
+
+  <div class="content">
+
+    <!-- INPUTS ROSEMONT (id=inp-r) -->
+    <div id="inp-r" class="inp-wrap">
+      <div class="inp-ttl"><span class="inp-dot" style="background:var(--bleu2)"></span>Paramètres — Rosemont · 25 Bd Carnot</div>
+      <div class="inp-grid">
+        <div class="ig"><label>Loyer HC</label><div class="iw"><input type="number" id="p_lhc" value="971.12" step="0.01" oninput="recalc()"><span class="sfx">€/m</span></div></div>
+        <div class="ig"><label>Provisions</label><div class="iw"><input type="number" id="p_prov" value="78.88" step="0.01" oninput="recalc()"><span class="sfx">€/m</span></div></div>
+        <div class="ig"><label>Loyer CC</label><div class="deriv" id="p_lcc_d">1 050,00 €/m</div></div>
+        <div class="ig"><label>Taxe foncière</label><div class="iw"><input type="number" id="p_tf" value="1127" step="1" oninput="recalc()"><span class="sfx">€/an</span></div></div>
+        <div class="ig"><label>CFE</label><div class="iw"><input type="number" id="p_cfe" value="400" step="1" oninput="recalc()"><span class="sfx">€/an</span></div></div>
+      </div>
+      <label class="solde-check"><input type="checkbox" id="p_solde" onchange="recalc()"><span class="solde-label">Crédit soldé</span><span class="solde-sub">Simuler sans mensualité prêt ni assurance emprunteur</span></label>
+    </div>
+
+    <!-- INPUTS CIMIEZ (id=inp-c) -->
+    <div id="inp-c" class="inp-wrap" style="display:none">
+      <div class="inp-ttl"><span class="inp-dot" style="background:var(--or2)"></span>Paramètres — Cimiez · 10 Av. Elisabeth</div>
+      <div class="inp-grid">
+        <div class="ig"><label>Loyer HC</label><div class="iw"><input type="number" id="c_lhc" value="950" step="0.01" oninput="recalc()"><span class="sfx">€/m</span></div></div>
+        <div class="ig"><label>Provisions</label><div class="iw"><input type="number" id="c_prov" value="150" step="0.01" oninput="recalc()"><span class="sfx">€/m</span></div></div>
+        <div class="ig"><label>Loyer CC</label><div class="deriv" id="c_lcc_d">1 100,00 €/m</div></div>
+        <div class="ig"><label>Taxe foncière</label><div class="iw"><input type="number" id="c_tf" value="1146" step="1" oninput="recalc()"><span class="sfx">€/an</span></div></div>
+        <div class="ig"><label>CFE</label><div class="iw"><input type="number" id="c_cfe" value="600" step="1" oninput="recalc()"><span class="sfx">€/an</span></div></div>
+      </div>
+      <label class="solde-check"><input type="checkbox" id="c_solde" onchange="recalc()"><span class="solde-label">Crédit soldé</span><span class="solde-sub">Simuler sans mensualité prêt ni assurance emprunteur</span></label>
+    </div>
+
+    <!-- VENTE (id=inp-v) -->
+    <div id="inp-v" style="display:none">
+      <div class="inp-wrap">
+        <div class="inp-ttl"><span class="inp-dot" style="background:var(--rouge)"></span>Simulation de vente</div>
+        <div class="vb-row">
+          <button class="vb ar" id="vb-r" onclick="selVBien('r')">⚓ Vente Rosemont</button>
+          <button class="vb" id="vb-c" onclick="selVBien('c')">🏛 Vente Cimiez</button>
+        </div>
+        <div class="inp-grid">
+          <div class="ig"><label>Prix au m²</label><div class="iw"><input type="number" id="v_pm2" value="6000" step="100" oninput="recalcVente()"><span class="sfx">€/m²</span></div></div>
+          <div class="ig"><label>Commission agence</label><div class="iw"><input type="number" id="v_ag" value="6.5" step="0.1" oninput="recalcVente()"><span class="sfx">%</span></div></div>
+        </div>
+      </div>
+      <div class="chart-card" style="margin-top:0.5rem">
+        <div class="cc-ttl" id="v_chart_ttl">Trésorerie nette vente Rosemont vs CRD Cimiez</div>
+        <div class="cleg" id="v_chart_leg">
+          <span><span class="cdot" style="background:#2D5A3D"></span>Tréso nette (Rés. principale)</span>
+          <span><span class="cdot" style="background:#E74C3C"></span>Tréso nette (Rés. secondaire)</span>
+          <span><span class="cdot" style="background:#C8960C;border:1px dashed #C8960C"></span>CRD Cimiez</span>
+        </div>
+        <div style="height:300px"><canvas id="cVente" role="img" aria-label="Simulation vente"></canvas></div>
+      </div>
+      <div id="v_result"></div>
+    </div>
+
+    <!-- AIRBNB (id=inp-a) -->
+    <div id="inp-a" style="display:none">
+      <div class="inp-wrap">
+        <div class="inp-ttl"><span class="inp-dot" style="background:#FF5A5F"></span>Simulation Location Courte Durée</div>
+        <div class="vb-row">
+          <button class="vb ar" id="ab-r" onclick="selABien('r')">⚓ Rosemont</button>
+          <button class="vb" id="ab-c" onclick="selABien('c')">🏛 Cimiez</button>
+        </div>
+        <div class="vb-row" style="margin-top:0.5rem">
+          <button class="vb ar" id="am-full" onclick="selAMode('full')" style="font-size:0.7rem">🏠 Airbnb 100%</button>
+          <button class="vb" id="am-mix" onclick="selAMode('mix')" style="font-size:0.7rem">🎓 Location mixte (étudiant + été)</button>
+        </div>
+        <div id="a_mix_note" style="display:none;margin-top:0.5rem;padding:0.6rem 0.8rem;border-radius:8px;background:rgba(41,82,163,0.06);border-left:3px solid var(--bleu2);font-size:0.68rem;color:var(--ink2);line-height:1.5">
+          <strong>Location mixte Nice</strong> — Étudiant 9 mois (oct→juin) + Airbnb 3 mois l'été (juil→sept). Dispositif illimité dans le temps, sans compensation, même en SCI. Loyer étudiant plafonné ~500 €/mois.
+        </div>
+        <div class="inp-grid" style="margin-top:0.6rem">
+          <div class="ig"><label>Prix par nuit Airbnb</label><div class="iw"><input type="number" id="a_nuit" value="85" step="5" oninput="recalcAirbnb()"><span class="sfx">€/nuit</span></div></div>
+          <div class="ig"><label>Taux d'occupation été</label><div class="iw"><input type="number" id="a_occ" value="70" step="5" min="0" max="100" oninput="recalcAirbnb()"><span class="sfx">%</span></div></div>
+          <div class="ig"><label>Commission Airbnb</label><div class="iw"><input type="number" id="a_comm" value="15.5" step="0.5" oninput="recalcAirbnb()"><span class="sfx">%</span></div></div>
+        </div>
+        <div id="a_mix_inputs" style="display:none;margin-top:0.5rem">
+          <div class="inp-grid">
+            <div class="ig"><label>Loyer étudiant HC</label><div class="iw"><input type="number" id="a_etu_loyer" value="500" step="10" oninput="recalcAirbnb()"><span class="sfx">€/mois</span></div></div>
+            <div class="ig"><label>Durée location étudiant</label><div class="iw"><input type="number" id="a_etu_mois" value="9" step="1" min="1" max="12" oninput="recalcAirbnb()"><span class="sfx">mois</span></div></div>
+          </div>
+        </div>
+        <label class="solde-check" style="margin-top:0.8rem"><input type="checkbox" id="a_conc" onchange="recalcAirbnb()"><span class="solde-label">Conciergerie Airbnb</span><span class="solde-sub">Gestion, ménage, accueil, linge — délégation complète (déductible BIC)</span></label>
+        <div id="a_conc_wrap" style="display:none;margin-top:0.5rem">
+          <div class="inp-grid">
+            <div class="ig"><label>Taux conciergerie</label><div class="iw"><input type="number" id="a_conc_tx" value="20" step="1" min="0" max="50" oninput="recalcAirbnb()"><span class="sfx">% du CA brut</span></div></div>
+          </div>
+        </div>
+        <label class="solde-check" style="margin-top:0.5rem"><input type="checkbox" id="a_solde" onchange="recalcAirbnb()"><span class="solde-label">Crédit soldé</span><span class="solde-sub">Simuler sans mensualité prêt ni assurance emprunteur</span></label>
+      </div>
+      <div id="a_result"></div>
+    </div>
+
+    <!-- KPI STRIP (id=kpiStrip) -->
+    <div id="kpiStrip"></div>
+
+    <!-- MAIN WRAP (id=mainWrap) -->
+    <div id="mainWrap">
+      <div class="charts-row-main">
+        <div class="chart-card">
+          <div class="cc-ttl">Net versable mensuel — Rosemont · Cimiez · Consolidé</div>
+          <div class="cleg">
+            <span><span class="cdot" style="background:var(--bleu2)"></span>Rosemont</span>
+            <span><span class="cdot" style="background:var(--or2)"></span>Cimiez</span>
+            <span><span class="cdot" style="background:var(--ink)"></span>Consolidé</span>
+          </div>
+          <div style="height:200px"><canvas id="cNet" role="img" aria-label="Net mensuel">G</canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="cc-ttl">Capital remboursé · Net versable cumulé</div>
+          <div class="cleg">
+            <span><span class="cdot" style="background:var(--or2)"></span>Capital cumulé</span>
+            <span><span class="cdot" style="background:var(--vert)"></span>Net cumulé</span>
+          </div>
+          <div style="height:200px"><canvas id="cRich" role="img" aria-label="Capital">G</canvas></div>
+        </div>
+      </div>
+      <div class="charts-row-sec">
+        <div class="chart-card">
+          <div class="cc-ttl">Flux annuels — Loyers · Sorties · Net</div>
+          <div style="height:150px"><canvas id="cFlux" role="img" aria-label="Flux">G</canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="cc-ttl">Répartition des sorties</div>
+          <div style="height:120px"><canvas id="cDonut" role="img" aria-label="Répartition">G</canvas></div>
+          <div class="cleg" style="margin-top:0.5rem;font-size:0.57rem">
+            <span><span class="cdot" style="background:var(--bleu)"></span>Prêt</span>
+            <span><span class="cdot" style="background:var(--ink2)"></span>TF</span>
+            <span><span class="cdot" style="background:var(--ink3)"></span>Copro</span>
+            <span><span class="cdot" style="background:var(--or2)"></span>PNO</span>
+            <span><span class="cdot" style="background:var(--line)"></span>CFE</span>
+          </div>
+        </div>
+      </div>
+      <!-- DETAIL (id=detail) -->
+      <div id="detail"></div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main-wrap -->
+
+
+<script>
+// ══ DONNÉES PRÊT ════════════════════════════════════════════════════════
+const LY_P={
+  2025:{cap:788.70, int:927.46, ass:160.76, tot:1877.92, m:3},
+  2026:{cap:3225.08,int:3649.94,ass:301.27, tot:7176.29, m:12},
+  2027:{cap:3340.45,int:3551.63,ass:61.08,  tot:6953.16, m:12},
+  2028:{cap:3459.94,int:3449.79,ass:61.08,  tot:6970.81, m:12},
+  2029:{cap:3583.73,int:3344.30,ass:61.08,  tot:6989.11, m:12},
+  2030:{cap:3711.90,int:3235.05,ass:61.08,  tot:7008.03, m:12},
+  2031:{cap:3844.73,int:3121.81,ass:61.08,  tot:7027.62, m:12},
+  2032:{cap:3982.25,int:3004.63,ass:61.08,  tot:7047.96, m:12},
+  2033:{cap:4124.70,int:2883.22,ass:61.08,  tot:7069.00, m:12},
+  2034:{cap:4272.26,int:2757.46,ass:61.08,  tot:7090.80, m:12},
+  2035:{cap:4425.10,int:2627.20,ass:61.08,  tot:7113.38, m:12},
+  2036:{cap:4583.40,int:2492.29,ass:61.08,  tot:7136.77, m:12},
+  2037:{cap:4747.35,int:2352.55,ass:61.08,  tot:7160.98, m:12},
+  2038:{cap:4917.22,int:2207.77,ass:61.08,  tot:7186.07, m:12},
+  2039:{cap:5093.09,int:2057.88,ass:61.08,  tot:7212.05, m:12},
+  2040:{cap:5275.29,int:1902.60,ass:61.08,  tot:7238.97, m:12},
+};
+const LY_C={
+  2026:{cap:5729.49,int:1841.55,ass:152.04,tot:7723.08,m:12},
+  2027:{cap:5809.06,int:1761.98,ass:152.04,tot:7723.08,m:12},
+  2028:{cap:5889.73,int:1681.31,ass:152.04,tot:7723.08,m:12},
+  2029:{cap:5971.52,int:1599.52,ass:152.04,tot:7723.08,m:12},
+  2030:{cap:6054.45,int:1516.59,ass:152.04,tot:7723.08,m:12},
+  2031:{cap:6138.54,int:1432.50,ass:152.04,tot:7723.08,m:12},
+  2032:{cap:6223.79,int:1347.25,ass:152.04,tot:7723.08,m:12},
+  2033:{cap:6310.22,int:1260.82,ass:152.04,tot:7723.08,m:12},
+  2034:{cap:6397.85,int:1173.19,ass:152.04,tot:7723.08,m:12},
+  2035:{cap:6486.70,int:1084.34,ass:152.04,tot:7723.08,m:12},
+  2036:{cap:6576.79,int:994.25, ass:152.04,tot:7723.08,m:12},
+  2037:{cap:6668.12,int:902.92, ass:152.04,tot:7723.08,m:12},
+  2038:{cap:6760.73,int:810.31, ass:152.04,tot:7723.08,m:12},
+  2039:{cap:6854.62,int:716.42, ass:152.04,tot:7723.08,m:12},
+  2040:{cap:6949.81,int:621.23, ass:152.04,tot:7723.08,m:12},
+};
+
+// CRD exacts — lus dans les tableaux officiels Caisse d'Épargne
+const CRD_P={2025:123133.80,2026:119908.72,2027:116568.27,2028:113108.33,2029:109524.60,2030:105812.70,2031:101967.97,2032:97985.72,2033:93861.02,2034:89588.76,2035:85163.66,2036:80580.26,2037:75832.91,2038:70915.69,2039:65822.60,2040:60547.31,2041:55111.57,2042:49510.49,2043:43739.05,2044:37792.07,2045:31664.20,2046:25349.95,2047:18843.65,2048:12139.45,2049:5231.34,2050:0};
+const CRD_C={2026:130335.90,2027:124526.84,2028:118637.11,2029:112665.57,2030:106611.13,2031:100472.61,2032:96332.96,2033:90051.69,2034:83683.19,2035:77226.25,2036:70679.62,2037:64042.08,2038:57312.36,2039:50489.18,2040:43571.24,2041:36557.23,2042:29445.81,2043:22235.63,2044:14925.32,2045:7513.49,2046:0};
+
+// Constantes
+const CP={pno:140,copro:711.47,amo_bien_an:4578.63,amo_trav_an:1299.43,amo_mob_an:210.68,amo_incorp_an:3.70,amo_bien_b:123150,amo_trav_b:24413.99,pret_init:123000};
+const CC={pno:180,copro:42.01*12,amo_bien_an:5431.50,amo_trav_an:2300,amo_bien_b:153000,amo_trav_b:23000,pret_init:160000};
+// Investissement initial complet par bien
+const INV_P={apport:10000,frais_acq:15263.50,travaux:25051.28}; // total: 50 314.78
+const INV_C={apport:38920,frais_acq:14575,travaux:23000};       // total: 76 495
+
+const YEARS=Object.keys({...LY_P,...LY_C}).map(Number).filter((v,i,a)=>a.indexOf(v)===i).sort();
+const f0=v=>Math.round(v).toLocaleString('fr-FR');
+const fe=v=>f0(v)+' €';
+const f2=v=>(Math.round(v*100)/100).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+const fpm=v=>(v>=0?'+ ':'− ')+f0(Math.abs(v))+' €';
+const fpmm=v=>(v>=0?'+ ':'− ')+f0(Math.abs(v))+' €/mois';
+let charts={},curYr=2026,curBien='r',curVBien='r',curRegime='rs';
+
+function gP(){return{
+  p_lhc:+document.getElementById('p_lhc').value||0,
+  p_prov:+document.getElementById('p_prov').value||0,
+  p_tf:+document.getElementById('p_tf').value||0,
+  p_cfe:+document.getElementById('p_cfe').value||0,
+  c_lhc:+document.getElementById('c_lhc').value||0,
+  c_prov:+document.getElementById('c_prov').value||0,
+  c_tf:+document.getElementById('c_tf').value||0,
+  c_cfe:+document.getElementById('c_cfe').value||0,
+};}
+
+function calcP(yr,p){
+  if(!activeP)return null;
+  const d=LY_P[yr];if(!d)return null;
+  const fr=d.m/12;
+  const solde=document.getElementById('p_solde')&&document.getElementById('p_solde').checked;
+  const tot=solde?0:d.tot, int_=solde?0:d.int, ass_=solde?0:d.ass, cap_=solde?0:d.cap;
+  const lhc=p.p_lhc*d.m,prov=p.p_prov*d.m,lcc=(p.p_lhc+p.p_prov)*d.m;
+  const tf=p.p_tf*fr,pno=CP.pno*fr,copro=CP.copro*fr;
+  const cfe=(yr===2025)?0:p.p_cfe*fr; // exonéré 1ère année
+  // CF: frais acq exclus (payés juil 2025 avant location)
+  const sorties=tot+tf+pno+copro+cfe;
+  const cf=lhc-sorties,cfM=cf/d.m;
+  // Amortissements: travaux jusqu'à 2039 complet, 2040-2044 PRODECO seul (984.50), mob jusqu'à 2035
+  const amoTrav=(yr<=2039?CP.amo_trav_an:(yr<=2044?984.50:0))*fr;
+  const amoMob=(yr<=2035?(CP.amo_mob_an+CP.amo_incorp_an):0)*fr;
+  const amoBien=CP.amo_bien_an*fr,amo=amoBien+amoTrav+amoMob;
+  // BIC: frais acq déductibles 2025 uniquement
+  const facq_bic=yr===2025?CP.frais_acq||(INV_P.frais_acq):0;
+  const bic=lhc-(int_+ass_+tf+pno+copro+p.p_cfe*fr+facq_bic+amo);
+  return{yr,m:d.m,fr,cap:cap_,int:int_,ass:ass_,tot:tot,
+    lhc,prov,lcc,tf,pno,copro,cfe,sorties,cf,cfM,amoBien,amoTrav,amo,bic,
+    amo_bien_b:CP.amo_bien_b,amo_trav_b:CP.amo_trav_b,pret_init:CP.pret_init,
+    label:'Rosemont',bien:'r',solde:solde};
+}
+
+function calcC(yr,p){
+  if(!activeC)return null;
+  const d=LY_C[yr];if(!d)return null;
+  const fr=d.m/12;
+  const solde=document.getElementById('c_solde')&&document.getElementById('c_solde').checked;
+  const tot=solde?0:d.tot, int_=solde?0:d.int, ass_=solde?0:d.ass, cap_=solde?0:d.cap;
+  const lhc=p.c_lhc*d.m,prov=p.c_prov*d.m,lcc=(p.c_lhc+p.c_prov)*d.m;
+  const tf=p.c_tf*fr,pno=CC.pno*fr,copro=CC.copro*fr,cfe=p.c_cfe*fr;
+  // CF: loyer HC uniquement (provisions neutres)
+  const sorties=tot+tf+pno+copro+cfe;
+  const cf=lhc-sorties,cfM=cf/d.m;
+  // BIC: frais notaire déductibles 2026 uniquement
+  const facq_bic=yr===2026?INV_C.frais_acq:0;
+  const amoTrav=(yr<=2035?CC.amo_trav_an:0)*fr;
+  const amoBien=CC.amo_bien_an*fr,amo=amoBien+amoTrav;
+  const bic=lhc-(int_+ass_+tf+pno+copro+cfe+facq_bic+amo);
+  return{yr,m:d.m,fr,cap:cap_,int:int_,ass:ass_,tot:tot,
+    lhc,prov,lcc,tf,pno,copro,cfe,sorties,cf,cfM,amoBien,amoTrav,amo,bic,
+    amo_bien_b:CC.amo_bien_b,amo_trav_b:CC.amo_trav_b,pret_init:CC.pret_init,
+    label:'Cimiez',bien:'c',solde:solde};
+}
+
+function buildAll(p){
+  let capP=0,cfP=0,capC=0,cfC=0,aBienP=0,aTravP=0,aBienC=0,aTravC=0;
+  let deficitP=0,deficitC=0; // stock de déficits reportables LMNP
+  const soldeP=document.getElementById('p_solde')&&document.getElementById('p_solde').checked;
+  const soldeC=document.getElementById('c_solde')&&document.getElementById('c_solde').checked;
+  return YEARS.map(yr=>{
+    const dP=calcP(yr,p),dC=calcC(yr,p);
+    if(dP){capP+=dP.cap;cfP+=dP.cf;aBienP+=dP.amoBien;aTravP+=dP.amoTrav;
+      dP.capCumul=capP;dP.cfCumul=cfP;
+      dP.richesse=capP+cfP;
+      dP.aBienC=aBienP;dP.aTravC=aTravP;
+      dP.aBPct=Math.min(100,aBienP/CP.amo_bien_b*100);
+      dP.aTRPct=Math.min(100,aTravP/CP.amo_trav_b*100);
+      // Impôt LMNP si crédit soldé
+      if(soldeP && dP.bic<0){deficitP+=Math.abs(dP.bic);dP.impotLMNP=0;dP.bicImposable=0;dP.deficitCumul=deficitP;}
+      else if(soldeP && dP.bic>=0){
+        if(deficitP>=dP.bic){deficitP-=dP.bic;dP.bicImposable=0;dP.impotLMNP=0;}
+        else{const bi=dP.bic-deficitP;deficitP=0;dP.bicImposable=bi;dP.impotLMNP=bi*0.472;}
+        dP.deficitCumul=deficitP;
+      }else{dP.impotLMNP=0;dP.bicImposable=0;dP.deficitCumul=deficitP;}
+      // Ajuster CF et cfM si impôt
+      if(soldeP && dP.impotLMNP>0){
+        dP.sorties+=dP.impotLMNP;dP.cf=dP.lhc-dP.sorties;dP.cfM=dP.cf/dP.m;
+        cfP=cfP-dP.impotLMNP; // corrige le cumulé
+      }
+    }
+    if(dC){capC+=dC.cap;cfC+=dC.cf;aBienC+=dC.amoBien;aTravC+=dC.amoTrav;
+      dC.capCumul=capC;dC.cfCumul=cfC;
+      dC.richesse=capC+cfC;
+      dC.aBienC=aBienC;dC.aTravC=aTravC;
+      dC.aBPct=Math.min(100,aBienC/CC.amo_bien_b*100);
+      dC.aTRPct=Math.min(100,aTravC/CC.amo_trav_b*100);
+      // Impôt LMNP si crédit soldé
+      if(soldeC && dC.bic<0){deficitC+=Math.abs(dC.bic);dC.impotLMNP=0;dC.bicImposable=0;dC.deficitCumul=deficitC;}
+      else if(soldeC && dC.bic>=0){
+        if(deficitC>=dC.bic){deficitC-=dC.bic;dC.bicImposable=0;dC.impotLMNP=0;}
+        else{const bi=dC.bic-deficitC;deficitC=0;dC.bicImposable=bi;dC.impotLMNP=bi*0.472;}
+        dC.deficitCumul=deficitC;
+      }else{dC.impotLMNP=0;dC.bicImposable=0;dC.deficitCumul=deficitC;}
+      if(soldeC && dC.impotLMNP>0){
+        dC.sorties+=dC.impotLMNP;dC.cf=dC.lhc-dC.sorties;dC.cfM=dC.cf/dC.m;
+        cfC=cfC-dC.impotLMNP;
+      }
+    }
+    const cfB=(dP?dP.cf:0)+(dC?dC.cf:0);
+    return{yr,r:dP,c:dC,cfB,cfBM:cfB/12,
+      capB:(dP?dP.capCumul:capP)+(dC?dC.capCumul:capC),
+      richB:(dP?dP.richesse:0)+(dC?dC.richesse:0)};
+  });
+}
+
+function dc(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+
+function selBien(b,btn){
+  curBien=b;
+  document.querySelectorAll('.nb').forEach(x=>x.classList.remove('ar','ac','ab','av'));
+  btn.classList.add(b==='r'?'ar':b==='c'?'ac':b==='b'?'ab':b==='v'?'av':'av');
+  const isV=b==='v',isA=b==='a';
+  document.getElementById('inp-r').style.display=(!isV&&!isA&&(b==='r'||b==='b'))?'block':'none';
+  document.getElementById('inp-c').style.display=(!isV&&!isA&&(b==='c'||b==='b'))?'block':'none';
+  document.getElementById('inp-v').style.display=isV?'block':'none';
+  document.getElementById('inp-a').style.display=isA?'block':'none';
+  document.getElementById('heroBand').style.display=(isV||isA)?'none':'block';
+  document.getElementById('mainWrap').style.display=(isV||isA)?'none':'block';
+  document.getElementById('kpiStrip').style.display=(isV||isA)?'none':'grid';
+  document.querySelector('.topbar').style.display=(isV||isA)?'none':'flex';
+  if(isV)recalcVente();else if(isA)recalcAirbnb();else recalc();
+}
+
+function selVBien(b){
+  curVBien=b;
+  const r=document.getElementById('vb-r'), ci=document.getElementById('vb-c');
+  r.style.background=b==='r'?'#002395':'white';
+  r.style.color=b==='r'?'white':'#5C6475';
+  r.style.borderColor=b==='r'?'#002395':'#DDE0E8';
+  ci.style.background=b==='c'?'#C8960C':'white';
+  ci.style.color=b==='c'?'white':'#5C6475';
+  ci.style.borderColor=b==='c'?'#C8960C':'#DDE0E8';
+  document.getElementById('v_pm2').value=b==='r'?6000:5000;
+  recalcVente();
+}
+
+function selRegime(r){
+  curRegime=r;
+  recalcVente();
+}
+
+// Abattements IR/PS résidence secondaire
+function abatIR(a){if(a<6)return 0;if(a>=22)return 100;return Math.min(100,(a-5)*6);}
+function abatPS(a){
+  if(a<6)return 0;if(a>=30)return 100;
+  let p=0;if(a>=6)p+=(Math.min(a,21)-5)*1.65;
+  if(a>=22)p+=1.60;if(a>=23)p+=Math.min(a-22,8)*9;return Math.min(100,p);
+}
+// Surtaxe hautes plus-values (art. 1609 nonies G CGI)
+function surtaxe(pv){
+  if(pv<=50000)return 0;
+  if(pv<=60000)return(pv-50000)*0.02;
+  if(pv<=100000)return 200+(pv-60000)*0.03;
+  if(pv<=110000)return 1400+(pv-100000)*0.04;
+  if(pv<=150000)return 1800+(pv-110000)*0.05;
+  return 3800+(pv-150000)*0.06;
+}
+
+let chartVente=null;
+function recalcVente(){
+  const b=curVBien,p=gP();
+  const pm2=+document.getElementById('v_pm2').value||0;
+  const txAg=+document.getElementById('v_ag').value||0;
+  const surf=b==='r'?31.13:51;
+  const inv=b==='r'?INV_P:INV_C;
+  const prixBrut=pm2*surf,fraisAg=prixBrut*txAg/100,prixNet=prixBrut-fraisAg;
+  const anneeAchat=b==='r'?2025:2021;
+  const crdVendu=b==='r'?CRD_P:CRD_C;
+  const crdAutre=b==='r'?CRD_C:CRD_P;
+  const nomVendu=b==='r'?'Rosemont':'Cimiez';
+  const nomAutre=b==='r'?'Cimiez':'Rosemont';
+  const LY=b==='r'?LY_P:LY_C;
+  const aRef=b==='r'?CP:CC;
+
+  // Update chart title & legend
+  document.getElementById('v_chart_ttl').textContent=`Trésorerie nette vente ${nomVendu} vs CRD ${nomAutre}`;
+  document.getElementById('v_chart_leg').innerHTML=
+    `<span><span class="cdot" style="background:#2D5A3D"></span>Tréso nette (Rés. principale)</span>
+     <span><span class="cdot" style="background:#E74C3C"></span>Tréso nette (Rés. secondaire)</span>
+     <span><span class="cdot" style="background:${b==='r'?'var(--or2)':'var(--bleu2)'};opacity:0.6"></span>CRD ${nomAutre}</span>`;
+
+  // Build year range
+  const startYr=b==='r'?2026:2026;
+  const endYr=b==='r'?2050:2046;
+  const years=[];for(let y=startYr;y<=endYr;y++)years.push(y);
+
+  const tresoRP=[],tresoRS=[],crdAutreArr=[];
+
+  years.forEach(yr=>{
+    const ans=yr-anneeAchat;
+    const crd=crdVendu[yr]||0;
+
+    // Plus-value calculation
+    // Amortissements cumulés (réintégrés LFI 2025)
+    let amoC=0;
+    Object.keys(LY).map(Number).filter(y=>y<=yr).forEach(y=>{
+      const fr=LY[y].m/12;
+      amoC+=aRef.amo_bien_an*fr;
+      // Travaux
+      if(b==='r'){
+        amoC+=(y<=2039?aRef.amo_trav_an:(y<=2044?984.50:0))*fr;
+        if(y<=2035)amoC+=(aRef.amo_mob_an+aRef.amo_incorp_an)*fr;
+      }else{
+        amoC+=(y<=2035?CC.amo_trav_an:0)*fr;
+      }
+    });
+
+    const prixAcqBrut=(b==='r'?133000:198920)+inv.frais_acq;
+    const prixAcqFiscal=prixAcqBrut-amoC;
+    const pvBrute=prixNet-prixAcqFiscal;
+
+    // RP: exonéré
+    const tresoNetRP=prixNet-crd;
+
+    // RS: impôt PV
+    let impotTotal=0;
+    if(pvBrute>0){
+      const tIR=abatIR(ans),tPS=abatPS(ans);
+      const pvIR=pvBrute*(1-tIR/100),pvPS=pvBrute*(1-tPS/100);
+      impotTotal=pvIR*0.19+pvPS*0.172+surtaxe(pvIR);
+    }
+    const tresoNetRS=prixNet-crd-impotTotal;
+
+    tresoRP.push(Math.round(tresoNetRP));
+    tresoRS.push(Math.round(tresoNetRS));
+    crdAutreArr.push(Math.round(crdAutre[yr]||0));
+  });
+
+  // Destroy previous chart
+  if(chartVente){chartVente.destroy();chartVente=null;}
+
+  const ctx=document.getElementById('cVente');
+  const colorAutre=b==='r'?'#C8960C':'#002395';
+  chartVente=new Chart(ctx,{type:'line',
+    data:{labels:years.map(String),datasets:[
+      {label:'Tréso nette (RP)',data:tresoRP,borderColor:'#2D5A3D',backgroundColor:'rgba(45,90,61,0.08)',borderWidth:2.5,pointRadius:3,fill:true,tension:0.3},
+      {label:'Tréso nette (RS)',data:tresoRS,borderColor:'#E74C3C',backgroundColor:'rgba(231,76,60,0.06)',borderWidth:2.5,pointRadius:3,fill:true,tension:0.3,borderDash:[6,3]},
+      {label:'CRD '+nomAutre,data:crdAutreArr,borderColor:colorAutre,backgroundColor:'transparent',borderWidth:2,pointRadius:2,fill:false,tension:0.3,borderDash:[4,4]}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{
+        callbacks:{label:ctx=>ctx.dataset.label+': '+f0(ctx.parsed.y)+' €'}
+      }},
+      scales:{
+        x:{grid:{color:'rgba(0,35,149,0.05)'},ticks:{color:'#9AA0B0',font:{size:9,family:"'DM Mono',monospace"},maxRotation:45}},
+        y:{grid:{color:'rgba(0,35,149,0.05)'},ticks:{color:'#9AA0B0',font:{size:9},callback:v=>{
+          if(Math.abs(v)>=1000)return Math.round(v/1000)+'k€';return f0(v)+'€';
+        }}}
+      }
+    }
+  });
+
+  // Summary table below chart
+  // Find crossover year: where tréso RS > CRD autre
+  let crossYr=null;
+  years.forEach((yr,i)=>{
+    if(!crossYr && tresoRS[i]>=crdAutreArr[i] && crdAutreArr[i]>0) crossYr=yr;
+  });
+
+  document.getElementById('v_result').innerHTML=`
+    <div class="g2" style="margin-top:0.5rem">
+      <div class="card bl">
+        <div class="ct">Récapitulatif vente ${nomVendu}</div>
+        ${trRow('Surface',surf+' m²','gr')}
+        ${trRow('Prix brut ('+pm2+' €/m²)',fe(prixBrut),'g')}
+        ${trRow('Commission agence ('+txAg+'%)',fe(fraisAg),'r')}
+        ${trTot('Prix net vendeur',fe(prixNet),'g')}
+      </div>
+      <div class="card ${crossYr?'vt':'rg'}">
+        <div class="ct">Croisement tréso / CRD ${nomAutre}</div>
+        ${crossYr?`
+          ${trRow('À partir de',crossYr,'g')}
+          ${trRow('Tréso nette RS en '+crossYr,fe(tresoRS[years.indexOf(crossYr)]),'g')}
+          ${trRow('CRD '+nomAutre+' en '+crossYr,fe(crdAutreArr[years.indexOf(crossYr)]),'or')}
+          <div class="note" style="border-left-color:var(--vert);background:var(--vert-p)">
+            En vendant ${nomVendu} en rés. secondaire à partir de ${crossYr}, la trésorerie nette couvre le remboursement total du prêt ${nomAutre}.</div>
+        `:`
+          <div class="note">Avec les paramètres actuels, la tréso nette RS ne dépasse jamais le CRD ${nomAutre} avant sa fin de prêt.</div>
+        `}
+      </div>
+    </div>`;
+}
+
+function recalc(){
+  const p=gP();
+  document.getElementById('p_lcc_d').textContent=f2(p.p_lhc+p.p_prov)+' €/mois';
+  document.getElementById('c_lcc_d').textContent=f2(p.c_lhc+p.c_prov)+' €/mois';
+  const all=buildAll(p);
+  renderYear(curYr,all,p);
+  buildCharts(all);
+}
+
+function trRow(l,v,c){return `<div class="tr"><span class="tl">${l}</span><span class="tv ${c||''}">${v}</span></div>`;}
+function trSub(l,v,c){return `<div class="tr sub"><span class="tl">${l}</span><span class="tv ${c||''}">${v}</span></div>`;}
+function trTot(l,v,c){return `<div class="tr tot"><span class="tl">${l}</span><span class="tv ${c||''}">${v}</span></div>`;}
+
+/* ===== AIRBNB ===== */
+let curABien='r',curAMode='full';
+function selABien(b){
+  curABien=b;
+  const r=document.getElementById('ab-r'),c=document.getElementById('ab-c');
+  r.style.background=b==='r'?'#002395':'white';r.style.color=b==='r'?'white':'#5C6475';r.style.borderColor=b==='r'?'#002395':'#DDE0E8';
+  c.style.background=b==='c'?'#C8960C':'white';c.style.color=b==='c'?'white':'#5C6475';c.style.borderColor=b==='c'?'#C8960C':'#DDE0E8';
+  document.getElementById('a_nuit').value=b==='r'?85:95;
+  recalcAirbnb();
+}
+function selAMode(m){
+  curAMode=m;
+  const f=document.getElementById('am-full'),x=document.getElementById('am-mix');
+  f.style.background=m==='full'?'#FF5A5F':'white';f.style.color=m==='full'?'white':'#5C6475';f.style.borderColor=m==='full'?'#FF5A5F':'#DDE0E8';
+  x.style.background=m==='mix'?'#2952A3':'white';x.style.color=m==='mix'?'white':'#5C6475';x.style.borderColor=m==='mix'?'#2952A3':'#DDE0E8';
+  document.getElementById('a_mix_note').style.display=m==='mix'?'block':'none';
+  document.getElementById('a_mix_inputs').style.display=m==='mix'?'block':'none';
+  recalcAirbnb();
+}
+
+function recalcAirbnb(){
+  const b=curABien,isMix=curAMode==='mix';
+  const prixNuit=+document.getElementById('a_nuit').value||0;
+  const occPct=+document.getElementById('a_occ').value||0;
+  const commPct=+document.getElementById('a_comm').value||0;
+  const hasConc=document.getElementById('a_conc').checked;
+  const concPct=hasConc?(+document.getElementById('a_conc_tx').value||0):0;
+  const soldePret=document.getElementById('a_solde').checked;
+  document.getElementById('a_conc_wrap').style.display=hasConc?'block':'none';
+
+  // Location mixte params
+  const etuLoyer=isMix?(+document.getElementById('a_etu_loyer').value||0):0;
+  const etuMois=isMix?(+document.getElementById('a_etu_mois').value||9):0;
+  const airbnbMois=isMix?(12-etuMois):12;
+
+  const nom=b==='r'?'Rosemont':'Cimiez';
+  const surf=b==='r'?31.13:51;
+  const constRef=b==='r'?CP:CC;
+  const LY=b==='r'?LY_P:LY_C;
+  const p=gP();
+  const tf=b==='r'?p.p_tf:p.c_tf;
+  const cfe=b==='r'?p.p_cfe:p.c_cfe;
+  const loyerHC_classique=b==='r'?p.p_lhc:p.c_lhc;
+
+  // Airbnb: nuits selon mode
+  const joursAirbnb=isMix?Math.round(airbnbMois*30.44):365;
+  const nuitsAn=Math.round(joursAirbnb*occPct/100);
+  const caBrut=prixNuit*nuitsAn;
+  const commAirbnb=caBrut*commPct/100;
+  const caNetHote=caBrut-commAirbnb;
+  const concFrais=hasConc?caBrut*concPct/100:0;
+  const revenuAirbnb=caNetHote-concFrais;
+
+  // Étudiant (location mixte)
+  const revenuEtu=etuLoyer*etuMois;
+
+  // Revenu total
+  const revenuTotal=revenuAirbnb+revenuEtu;
+  const revenuTotalM=revenuTotal/12;
+
+  // Taxe de séjour (info)
+  const taxeSejParNuit=Math.min(6.43,prixNuit*0.05*1.34);
+
+  // Charges fixes annuelles
+  const pno=constRef.pno;
+  const copro=constRef.copro;
+  const chargesFixes=tf+pno+copro+cfe;
+
+  // Mensualité prêt
+  const yrRef=2026;
+  const lyRef=LY[yrRef];
+  const mensualiteAn=soldePret?0:(lyRef?lyRef.tot:0);
+  const intAn=soldePret?0:(lyRef?lyRef.int:0);
+  const assAn=soldePret?0:(lyRef?lyRef.ass:0);
+
+  // Net
+  const netAn=revenuTotal-chargesFixes-mensualiteAn;
+  const netM=netAn/12;
+
+  // BIC fiscal: tout est déductible (commission, conciergerie, intérêts, charges, amortissements)
+  const amoTotal=constRef.amo_bien_an+(constRef.amo_trav_an||0)+(b==='r'?(CP.amo_mob_an+CP.amo_incorp_an):0);
+  const caTotal=caBrut+revenuEtu; // base BIC = recettes brutes totales
+  const chargesDeductibles=commAirbnb+concFrais+intAn+assAn+chargesFixes;
+  const bicBrut=caTotal-chargesDeductibles-amoTotal;
+
+  const bicImposable=Math.max(0,bicBrut);
+  const impotLMNP=bicImposable*0.472;
+  const netApresImpot=netAn-impotLMNP;
+  const netApresImpotM=netApresImpot/12;
+
+  // Comparaison location classique
+  const loyerClassiqueAn=loyerHC_classique*12;
+  const netClassiqueAn=loyerClassiqueAn-mensualiteAn-chargesFixes;
+  const delta=netApresImpot-netClassiqueAn;
+
+  const S=v=>(v>=0?'+ ':'− ')+f0(Math.abs(v))+' €';
+  const modeLabel=isMix?'Location mixte':'Airbnb 100%';
+  const dureeLabel=isMix?'Illimité (dispositif Nice)':'3 ans max (changement d\'usage)';
+
+  document.getElementById('a_result').innerHTML=`
+    <div class="g2" style="margin-top:0.5rem">
+      <div class="card" style="border-left:3px solid ${isMix?'#2952A3':'#FF5A5F'}">
+        <div class="ct">${modeLabel} — ${nom} · ${surf} m²</div>
+        ${isMix?`
+          <div style="font-size:0.6rem;font-weight:600;color:var(--bleu2);text-transform:uppercase;letter-spacing:0.1em;margin:0.5rem 0 0.3rem">Partie étudiant (${etuMois} mois)</div>
+          ${trRow('Loyer étudiant HC × '+etuMois+' mois',fe(revenuEtu),'g')}
+          <div style="font-size:0.6rem;font-weight:600;color:#FF5A5F;text-transform:uppercase;letter-spacing:0.1em;margin:0.8rem 0 0.3rem">Partie Airbnb (${airbnbMois} mois été)</div>
+        `:''}
+        ${trRow('Nuits louées'+(isMix?' ('+airbnbMois+' mois × '+occPct+'%)':' ('+occPct+'%)'),nuitsAn+' nuits','g')}
+        ${trRow('CA brut Airbnb ('+nuitsAn+' × '+prixNuit+'€)',fe(caBrut),'g')}
+        ${trRow('Commission Airbnb ('+commPct+'%)','− '+fe(commAirbnb),'r')}
+        ${hasConc?trRow('Conciergerie ('+concPct+'% du CA brut)','− '+fe(concFrais),'r'):''}
+        ${trTot('Revenu Airbnb net',fe(revenuAirbnb),'g')}
+        ${isMix?trTot('Revenu total (étudiant + Airbnb)',fe(revenuTotal)+' soit '+fe(revenuTotalM)+'/mois','g')
+          :trTot('Revenu net',fe(revenuAirbnb)+' soit '+fe(revenuAirbnb/12)+'/mois','g')}
+        <div class="note" style="border-left-color:#888;background:rgba(0,0,0,0.03)">
+          Taxe de séjour Nice (~${taxeSejParNuit.toFixed(2)}€/nuit/pers) collectée par Airbnb. Neutre pour vous.
+          ${isMix?'<br><strong>Durée du dispositif : illimitée</strong> — pas de compensation requise.':'<br>⚠️ Autorisation changement d\'usage : <strong>3 ans non renouvelable</strong> à Nice.'}
+        </div>
+      </div>
+
+      <div class="card ${netApresImpotM>=0?'vt':'rg'}">
+        <div class="ct">Cashflow mensuel — ${soldePret?'Crédit soldé':'Avec crédit'}</div>
+        ${trRow('Revenu total',fe(revenuTotal)+'/an','g')}
+        ${trRow('Mensualité prêt',soldePret?'0 € (soldé)':'− '+fe(mensualiteAn)+'/an',soldePret?'g':'r')}
+        ${trRow('Charges fixes (TF+PNO+copro+CFE)','− '+fe(chargesFixes)+'/an','r')}
+        ${trTot('Net avant impôt',fe(netAn)+'/an · '+fe(netM)+'/mois',netM>=0?'g':'r')}
+        ${bicImposable>0?trRow('Impôt LMNP (47,2% sur '+fe(bicImposable)+')','− '+fe(impotLMNP)+'/an','r')
+          :trRow('Impôt LMNP','0 € (BIC négatif)','g')}
+        ${trTot('Net après impôt',fe(netApresImpot)+'/an · '+fe(netApresImpotM)+'/mois',netApresImpotM>=0?'g':'r')}
+      </div>
+    </div>
+
+    <div class="g2" style="margin-top:0.5rem">
+      <div class="card bl">
+        <div class="ct">Résultat BIC fiscal — ${modeLabel} ${nom}</div>
+        ${trRow('Recettes brutes totales'+(isMix?' (étudiant + Airbnb)':''),fe(caTotal),'g')}
+        ${isMix?trSub('dont loyer étudiant',fe(revenuEtu),'gr'):''}
+        ${isMix?trSub('dont CA brut Airbnb',fe(caBrut),'gr'):''}
+        ${trRow('− Commission Airbnb ('+commPct+'%)','− '+fe(commAirbnb),'gr')}
+        ${hasConc?trRow('− Conciergerie ('+concPct+'%)','− '+fe(concFrais),'gr'):''}
+        ${soldePret?'':trRow('− Intérêts emprunt','− '+fe(intAn),'gr')}
+        ${soldePret?'':trRow('− Assurance emprunt','− '+fe(assAn),'gr')}
+        ${trRow('− Charges déductibles (TF+PNO+copro+CFE)','− '+fe(chargesFixes),'gr')}
+        ${trRow('− Amortissements','− '+fe(amoTotal),'gr')}
+        ${trTot('Résultat BIC',fpm(bicBrut),bicBrut<0?'g':'r')}
+        ${bicImposable>0?`
+          <div class="tr" style="margin-top:0.3rem"><span class="tl" style="font-weight:600">Impôt dû</span><span class="tv r" style="font-size:1rem">− ${fe(impotLMNP)}/an</span></div>
+          <div class="note" style="border-left-color:var(--rouge);background:rgba(200,50,50,0.05)">IR 30% (${fe(bicImposable*0.30)}) + PS 17,2% (${fe(bicImposable*0.172)}) = ${fe(impotLMNP)}/an soit ${fe(impotLMNP/12)}/mois</div>
+        `:`<div class="note" style="border-left-color:var(--vert);background:var(--vert-p)">BIC négatif — aucun impôt LMNP. Les amortissements couvrent le revenu.</div>`}
+      </div>
+
+      <div class="card ${delta>=0?'vt':'rg'}">
+        <div class="ct">Comparaison vs location classique</div>
+        ${trRow('Net '+modeLabel+' après impôt',fe(netApresImpot)+'/an · '+fe(netApresImpotM)+'/mois',netApresImpotM>=0?'g':'r')}
+        ${trRow('Net location classique ('+fe(loyerHC_classique)+'/m HC)',fe(netClassiqueAn)+'/an · '+fe(netClassiqueAn/12)+'/mois',netClassiqueAn>=0?'g':'r')}
+        ${trTot('Delta vs classique',S(delta)+'/an · '+S(delta/12)+'/mois',delta>=0?'g':'r')}
+        <div class="note">${delta>=0?
+          modeLabel+' rapporte '+fe(delta)+'/an de plus que la location classique.'+(isMix?' Et c\'est illimité dans le temps.':'')
+          :'La location classique est plus rentable de '+fe(Math.abs(delta))+'/an.'}</div>
+      </div>
+    </div>`;
+}
+function tableauBien(d,bdg){
+  if(!d)return'';
+  const pos=d.cfM>=0;
+  const ass_lbl=d.bien==='r'?(d.yr===2026?' (CNP+AXA)':d.yr<=2025?' (CNP)':' (AXA 5,09€/m)'):' (12,67€/m)';
+  const crdNow=d.bien==='r'?(CRD_P[d.yr]||0):(CRD_C[d.yr]||0);
+  return `
+<div class="g2" style="margin-bottom:0.8rem">
+  <div class="card ${d.bien==='r'?'bl':'or'}">
+    <div class="ct"><span class="bbdg ${bdg}">${d.bien==='r'?'⚓':'🏛'} ${d.label}</span> Entrées ${d.yr}</div>
+    ${trRow('Loyer HC ('+d.m+'m × '+fe(d.lhc/d.m)+')',fe(d.lhc),'g')}
+    ${trRow('Provisions récup. locataire',fe(d.prov),'gr')}
+    ${trTot('Total encaissé',fe(d.lcc),'g')}
+  </div>
+  <div class="card ${d.bien==='r'?'bl':'or'}">
+    <div class="ct"><span class="bbdg ${bdg}">${d.bien==='r'?'⚓':'🏛'} ${d.label}</span> Sorties ${d.yr}</div>
+    ${d.solde?`<div class="note" style="border-left-color:var(--vert);background:var(--vert-p);margin-bottom:0.5rem">Crédit soldé — plus de mensualité ni d'assurance emprunteur</div>`:''}
+    ${trRow('Mensualité prêt',d.solde?'0 € (soldé)':'− '+fe(d.tot),d.solde?'g':'r')}
+    ${d.solde?'':trSub('dont capital remboursé (épargne)','+ '+fe(d.cap),'or')}
+    ${d.solde?'':trSub('dont intérêts','− '+fe(d.int),'gr')}
+    ${d.solde?'':trSub('dont assurance empr.'+ass_lbl,'− '+fe(d.ass),'gr')}
+    ${trRow('Taxe foncière','− '+fe(d.tf),'r')}
+    ${trRow('Copropriété (part proprio)','− '+fe(d.copro),'r')}
+    ${trRow('Assurance PNO','− '+fe(d.pno),'r')}
+    ${trRow('CFE'+(d.yr===2025&&d.bien==='r'?' (exonérée)':''),d.yr===2025&&d.bien==='r'?'0 €':'− '+fe(d.cfe),d.yr===2025&&d.bien==='r'?'g':'r')}
+    ${d.impotLMNP>0?trRow('Impôt LMNP (TMI 30% + PS 17,2%)','− '+fe(d.impotLMNP),'r'):trRow('Impôt LMNP',d.solde&&d.deficitCumul>0?'0 € (report: '+fe(d.deficitCumul)+')':'0 €','g')}
+    ${trTot('Total sorties réelles','− '+fe(d.sorties),'r')}
+  </div>
+</div>
+<div class="card ${d.bien==='r'?'bl':'or'}" style="margin-bottom:1.2rem">
+  <div class="ct"><span class="bbdg ${bdg}">${d.bien==='r'?'⚓':'🏛'} ${d.label}</span> Résultat net & BIC ${d.yr}</div>
+  <div class="g2" style="gap:1.5rem">
+    <div>
+      <div style="font-size:0.52rem;font-weight:700;color:var(--gris2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.6rem">Cash-flow trésorerie</div>
+      ${trRow('Encaissé',fe(d.lcc),'g')}
+      ${trRow('Sorti','− '+fe(d.sorties),'r')}
+      ${trTot('<span style="font-size:0.85rem">Net versable / mois</span>','<span style="font-size:1.1rem">'+fpmm(d.cfM)+'</span>',pos?'g':'r')}
+      ${trTot('Net versable / an',fpm(d.cf),pos?'g':'r')}
+      <div style="margin-top:0.8rem;padding-top:0.6rem;border-top:1px solid var(--gris4)">
+        ${d.solde?'':trRow('Capital remboursé cette année','+ '+fe(d.cap),'or')}
+        ${d.solde?'':trRow('Capital remboursé cumulé','+ '+fe(d.capCumul),'or')}
+        ${trRow('CRD restant dû',d.solde?'0 € (soldé)':'− '+fe(crdNow),d.solde?'g':'r')}
+      </div>
+      <div style="margin-top:1rem;font-size:0.52rem;font-weight:700;color:var(--gris2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.6rem">Résultat BIC fiscal</div>
+      ${trRow('Loyers HC imposables',fe(d.lhc),'g')}
+      ${trRow('− Charges déductibles','− '+fe(d.int+d.ass+d.tf+d.pno+d.copro+d.cfe),'gr')}
+      ${trRow('− Amortissements (fictifs)','− '+fe(d.amo),'gr')}
+      ${trTot('Résultat BIC',fpm(d.bic),d.bic<0?'gr':'r')}
+      ${d.solde && d.deficitCumul>0?trRow('Stock déficit reportable',fe(d.deficitCumul),'gr'):''}
+      ${d.solde && d.bic>0 && d.bicImposable===0?trRow('Absorbé par déficit reporté','− '+fe(d.bic),'g'):''}
+      ${d.solde && d.bicImposable>0?trRow('BIC imposable (après report)',fe(d.bicImposable),'r'):''}
+      <div class="tr" style="border:none;margin-top:0.3rem"><span class="tl" style="font-weight:600">Impôt LMNP dû</span><span class="tv ${d.impotLMNP>0?'r':'g'}" style="font-size:1rem">${d.impotLMNP>0?'− '+fe(d.impotLMNP):'0 €'}</span></div>
+      ${d.impotLMNP>0?`<div class="note" style="border-left-color:var(--rouge);background:rgba(200,50,50,0.05)">TMI 30% (${fe(d.bicImposable*0.30)}) + PS 17,2% (${fe(d.bicImposable*0.172)}) = ${fe(d.impotLMNP)}/an soit ${fe(d.impotLMNP/12)}/mois</div>`:''}
+    </div>
+    <div>
+      <div style="font-size:0.52rem;font-weight:700;color:var(--gris2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.8rem">Amortissements cumulés</div>
+      <div class="gau"><div class="gau-h"><span>Bien immo (${fe(d.amo_bien_b)})</span><span>${fe(d.aBienC)}</span></div>
+        <div class="gau-t"><div class="gau-f" style="width:${d.aBPct.toFixed(1)}%;background:var(--bleu)"></div></div>
+        <div class="gau-p">${d.aBPct.toFixed(1)}%</div></div>
+      <div class="gau"><div class="gau-h"><span>Travaux (${fe(d.amo_trav_b)})</span><span>${fe(d.aTravC)}</span></div>
+        <div class="gau-t"><div class="gau-f" style="width:${d.aTRPct.toFixed(1)}%;background:var(--or)"></div></div>
+        <div class="gau-p">${d.aTRPct.toFixed(1)}%</div></div>
+      <div style="margin-top:1rem">
+
+      </div>
+      <div class="note">${d.impotLMNP>0?'Les amortissements ('+fe(d.amo)+'/an) ne suffisent plus à couvrir le BIC — '+fe(d.bicImposable)+' imposable cette année.':'Les amortissements ('+fe(d.amo)+'/an) sont fictifs — ils réduisent le BIC sans décaisser un centime.'}</div>
+    </div>
+  </div>
+</div>`;
+}
+
+function renderYear(yr,all,p){
+  curYr=yr;
+  document.querySelectorAll('.yr').forEach(b=>b.classList.toggle('active',+b.dataset.yr===yr));
+  const row=all.find(x=>x.yr===yr);
+  const dP=row?.r,dC=row?.c,b=curBien;
+  let netM=0,netAn=0,lcc=0,sorties=0,cap=0,capC=0,rich=0,label='',mois=12;
+  if(b==='r'&&dP){netM=dP.cfM;netAn=dP.cf;lcc=dP.lcc;sorties=dP.sorties;cap=dP.cap;capC=dP.capCumul;rich=dP.richesse;label='Rosemont';mois=dP.m;}
+  else if(b==='c'&&dC){netM=dC.cfM;netAn=dC.cf;lcc=dC.lcc;sorties=dC.sorties;cap=dC.cap;capC=dC.capCumul;rich=dC.richesse;label='Cimiez';mois=dC.m;}
+  else if(b==='b'){netM=row.cfBM;netAn=row.cfB;lcc=(dP?dP.lcc:0)+(dC?dC.lcc:0);
+    sorties=(dP?dP.sorties:0)+(dC?dC.sorties:0);cap=(dP?dP.cap:0)+(dC?dC.cap:0);
+    capC=row.capB;rich=row.richB;label='Consolidé';mois=12;}
+  else{
+    const noLabel=b==='r'?'Rosemont':b==='c'?'Cimiez':'Consolidé';
+    document.getElementById('topbar-ctx').textContent=noLabel+' · '+yr;
+    ['h_m','h_a'].forEach(id=>{document.getElementById(id).textContent='—';});
+    document.getElementById('kpiStrip').innerHTML='';
+    document.getElementById('detail').innerHTML=`<div style="text-align:center;padding:2rem;color:var(--gris2);font-style:italic">Aucune donnée pour ${yr}</div>`;
+    return;
+  }
+  const pos=netM>=0;
+  document.getElementById('topbar-ctx').textContent=label+' · '+yr;
+  document.getElementById('topbar-net').textContent=fpmm(netM);
+  document.getElementById('topbar-net').style.color=pos?'var(--vert)':'var(--rouge)';
+  document.getElementById('topbar-sub').textContent=mois+' mois · Loyer HC '+fe(b==='r'?p.p_lhc*mois:b==='c'?p.c_lhc*mois:(p.p_lhc+p.c_lhc)*mois)+' · Sorti '+fe(sorties);
+  document.getElementById('kpiStrip').innerHTML=[
+    {l:'Loyer CC/mois',v:fe(b==='r'?(p.p_lhc+p.p_prov):b==='c'?(p.c_lhc+p.c_prov):((p.p_lhc+p.p_prov)+(p.c_lhc+p.c_prov))),c:'',t:'gr'},
+    {l:'Net mensuel',v:fpmm(netM),c:pos?'vt':'rg',t:pos?'vt':'gr'},
+    {l:'Net annuel',v:fpm(netAn),c:pos?'vt':'rg',t:pos?'vt':'gr'},
+    {l:'Impôt LMNP',v:'0 €',c:'vt',t:'vt',s:'Amortissements'},
+    {l:'Capital cumulé',v:fe(capC),c:'or',t:'or',s:'Depuis location'},
+    {l:'Capital remboursé',v:fe(cap),c:'or',t:'or',s:'Cette année'},
+  ].map(k=>`<div class="kpi ${k.t}"><div class="klbl">${k.l}</div><div class="kval ${k.c}">${k.v}</div>${k.s?`<div class="ksub">${k.s}</div>`:''}</div>`).join('');
+
+  // Donut
+  let dPt=0,dTF=0,dPN=0,dCF=0,dCo=0;
+  if(b==='r'&&dP){dPt=dP.tot;dTF=dP.tf;dPN=dP.pno;dCF=dP.cfe;dCo=dP.copro;}
+  else if(b==='c'&&dC){dPt=dC.tot;dTF=dC.tf;dPN=dC.pno;dCF=dC.cfe;dCo=dC.copro;}
+  else if(b==='b'){dPt=(dP?dP.tot:0)+(dC?dC.tot:0);dTF=(dP?dP.tf:0)+(dC?dC.tf:0);dPN=(dP?dP.pno:0)+(dC?dC.pno:0);dCF=(dP?dP.cfe:0)+(dC?dC.cfe:0);dCo=(dP?dP.copro:0)+(dC?dC.copro:0);}
+  if(dPt>0){dc('cDonut');charts['cDonut']=new Chart(document.getElementById('cDonut'),{type:'doughnut',
+    data:{labels:['Prêt','TF','Copro','PNO','CFE'],datasets:[{data:[Math.round(dPt),Math.round(dTF),Math.round(dCo),Math.round(dPN),Math.round(dCF)],
+      backgroundColor:['#060D1F','#002395','#9AA0B0','#C8960C','#EAECf0'],borderColor:['#fff','#fff','#fff','#fff','#fff'],borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+' : '+f0(c.parsed)+' €'}}}}});}
+
+  let detail='';
+  if(b==='r') detail=tableauBien(dP,'r');
+  else if(b==='c') detail=tableauBien(dC,'c');
+  else{
+    const posB=netM>=0;
+    detail=`<div class="card" style="margin-bottom:1rem;background:${posB?'var(--bleu-p)':'var(--rouge-p)'};border-color:${posB?'rgba(0,35,149,0.2)':'rgba(192,57,43,0.2)'}">
+      <div class="ct">Résultat consolidé ${yr}</div>
+      <div class="g3">
+        <div><div style="font-size:0.52rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--bleu);margin-bottom:0.5rem">Rosemont</div>
+          ${dP?trRow('Net mensuel',fpmm(dP.cfM),dP.cfM>=0?'g':'r')+trRow('Net annuel',fpm(dP.cf),dP.cf>=0?'g':'r')+trRow('Loyer CC',fe(dP.lcc),'gr'):'—'}</div>
+        <div><div style="font-size:0.52rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--or);margin-bottom:0.5rem">Cimiez</div>
+          ${dC?trRow('Net mensuel',fpmm(dC.cfM),dC.cfM>=0?'g':'r')+trRow('Net annuel',fpm(dC.cf),dC.cf>=0?'g':'r')+trRow('Loyer CC',fe(dC.lcc),'gr'):'—'}</div>
+        <div style="border-left:1px solid var(--border);padding-left:1rem">
+          <div style="font-size:0.52rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--sombre);margin-bottom:0.5rem">Consolidé</div>
+          ${trTot('<span style="font-size:0.85rem">Net mensuel</span>','<span style="font-size:1.1rem">'+fpmm(netM)+'</span>',posB?'g':'r')}
+          ${trTot('Net annuel',fpm(netAn),posB?'g':'r')}
+          ${trRow('Capital remboursé année','+ '+fe(cap),'or')}
+          ${trRow('Capital remboursé cumulé','+ '+fe(capC),'or')}
+
+        </div>
+      </div>
+    </div>
+    ${tableauBien(dP,'r')}
+    ${tableauBien(dC,'c')}`;
+  }
+  document.getElementById('detail').innerHTML=detail;
+}
+
+function buildCharts(all){
+  const lbl=YEARS.map(String);
+  const cfP=YEARS.map(y=>{const r=all.find(x=>x.yr===y);return r?.r?Math.round(r.r.cfM):null;});
+  const cfC=YEARS.map(y=>{const r=all.find(x=>x.yr===y);return r?.c?Math.round(r.c.cfM):null;});
+  const cfB=YEARS.map(y=>{const r=all.find(x=>x.yr===y);return r?Math.round(r.cfBM):null;});
+  const lccA=YEARS.map(y=>{const r=all.find(x=>x.yr===y);return Math.round((r?.r?.lcc||0)+(r?.c?.lcc||0));});
+  const srtA=YEARS.map(y=>{const r=all.find(x=>x.yr===y);return-Math.round((r?.r?.sorties||0)+(r?.c?.sorties||0));});
+  const netA=YEARS.map(y=>{const r=all.find(x=>x.yr===y);return Math.round(r?.cfB||0);});
+  const capA=YEARS.map(y=>{const r=all.find(x=>x.yr===y);return Math.round(r?.capB||0);});
+  let _nc=0;const netCumA=YEARS.map(y=>{const r=all.find(x=>x.yr===y);_nc+=Math.round(r?.cfB||0);return _nc;});
+  const sc={x:{grid:{color:'rgba(0,35,149,0.05)'},ticks:{color:'#9AA0B0',font:{size:8,family:"'DM Mono',monospace"},maxRotation:45}},
+    y:{grid:{color:'rgba(0,35,149,0.05)'},ticks:{color:'#9AA0B0',font:{size:8},callback:v=>f0(v)+'€'}}};
+
+  dc('cNet');charts['cNet']=new Chart(document.getElementById('cNet'),{type:'line',
+    data:{labels:lbl,datasets:[
+      {label:'Rosemont',data:cfP,borderColor:'#002395',borderWidth:2.5,pointRadius:3,fill:false,tension:0.3,spanGaps:true,pointBackgroundColor:cfP.map(v=>v===null?null:v>=0?'#002395':'#E74C3C')},
+      {label:'Cimiez',data:cfC,borderColor:'#C8960C',borderWidth:2.5,pointRadius:3,fill:false,tension:0.3,spanGaps:true,pointBackgroundColor:cfC.map(v=>v===null?null:v>=0?'#C8960C':'#E74C3C')},
+      {label:'Consolidé',data:cfB,borderColor:'#060D1F',backgroundColor:'rgba(0,35,149,0.04)',borderWidth:3,pointRadius:4,fill:true,tension:0.3,spanGaps:true},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+' : '+(c.parsed.y!==null?Math.round(c.parsed.y).toLocaleString('fr-FR')+' €/m':'N/A')}}},scales:{...sc,y:{...sc.y,ticks:{...sc.y.ticks,callback:v=>v+'€/m'}}}}});
+
+  dc('cFlux');charts['cFlux']=new Chart(document.getElementById('cFlux'),{type:'bar',
+    data:{labels:lbl,datasets:[
+      {label:'Loyers CC',data:lccA,backgroundColor:'rgba(0,35,149,0.5)',borderRadius:2},
+      {label:'Sorties',data:srtA,backgroundColor:'rgba(192,57,43,0.4)',borderRadius:2},
+      {label:'Net',data:netA,backgroundColor:netA.map(v=>v>=0?'rgba(200,150,12,0.6)':'rgba(192,57,43,0.3)'),borderRadius:2},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+' : '+Math.round(c.parsed.y).toLocaleString('fr-FR')+' €'}}},scales:{...sc}}});
+
+  dc('cRich');charts['cRich']=new Chart(document.getElementById('cRich'),{type:'line',
+    data:{labels:lbl,datasets:[
+      {label:'Capital remboursé cumulé',data:capA,borderColor:'#C8960C',backgroundColor:'rgba(200,150,12,0.07)',borderWidth:2,fill:true,tension:0.3,pointRadius:2},
+      {label:'Net versable cumulé',data:netCumA,borderColor:'#1A6B3C',backgroundColor:'rgba(0,35,149,0.04)',borderWidth:2,fill:false,tension:0.3,pointRadius:2,borderDash:[5,3]},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+' : '+Math.round(ctx.parsed.y).toLocaleString('fr-FR')+' €'}}},scales:{...sc}}});
+}
+
+// ══ TOGGLE LOCATION ════════════════════════════════════════════════
+let activeP=true, activeC=true;
+
+function toggleBien(b, btn){
+  if(b==='r'){
+    activeP=!activeP;
+    btn.className='nb-toggle '+(activeP?'act-on':'act-off');
+    btn.querySelector('.tog-badge').className='tog-badge '+(activeP?'on':'off');
+    btn.querySelector('.tog-badge').textContent=activeP?'Loué':'Vacant';
+  } else {
+    activeC=!activeC;
+    btn.className='nb-toggle '+(activeC?'act-on':'act-off');
+    btn.querySelector('.tog-badge').className='tog-badge '+(activeC?'on':'off');
+    btn.querySelector('.tog-badge').textContent=activeC?'Loué':'Vacant';
+  }
+  recalc();
+}
+
+// INIT
+const yb=document.getElementById('yrBar');
+YEARS.forEach(yr=>{
+  const b=document.createElement('button');
+  b.className='yr'+(yr===2026?' active':'');b.dataset.yr=yr;b.textContent=yr;
+  b.onclick=()=>renderYear(yr,buildAll(gP()),gP());yb.appendChild(b);
+});
+recalc();
+</script>
+</script>
+</body>
+</html>
